@@ -1,9 +1,7 @@
+
 class Node:
-    """定义链表节点"""
-    def __init__(self, node):
-        # node存放节点元素
-        self.node = node
-        # next存放下节点元素
+    def __init__(self, head):
+        self.head = head
         self.next = None
 
 """
@@ -33,9 +31,14 @@ def reverseLinkList(linklist):
 
 
 if __name__ == '__main__':
+    # 当前链表结构
+    # node1->node2->node3
+
+    # 初始化一个链表
     Llist = Node(1)
     p2 = Node(2)
     p3 = Node(3)
+
 
     Llist.next = p2
     p2.next = p3
