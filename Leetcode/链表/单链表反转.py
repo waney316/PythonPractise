@@ -11,41 +11,36 @@ class Node:
 3:将当前节点赋值给上一个节点
 4:将指针从当前节点移到下一个节点
 """
-def reverseLinkList(linklist):
-    # 判断链表是否为空或单节点
-    if linklist is None or linklist.next is None:
-        return linklist
-    # 当前指针
-    cur_node = linklist
-    pre_node = None
-    while cur_node is not None:
-        # 临时保存当前节点
-        next_node = cur_node.next
-        # 将当前节点的下一节点为None
-        cur_node.next = pre_node
-        # 上一节点为当前节点
-        pre_node = cur_node
-        # 指针移到下一节点
-        cur_node = next_node
-    return pre_node
+
+def reverseLinkedList(head):
+    # 判断链表是否为空或单个节点
+    if head.next is None or not head:
+        return head
+
+    # 当前节点和当前节点的前驱节点
+    cur = head
+    pre = None
+    while cur:
+        next_node = cur.next
+        cur.next = pre
+        pre = cur
+        cur = next_node
+    return pre
 
 
 if __name__ == '__main__':
-    # 当前链表结构
-    # node1->node2->node3
-
-    # 初始化一个链表
-    Llist = Node(1)
+    p = Node(1)
     p2 = Node(2)
     p3 = Node(3)
-
-
-    Llist.next = p2
+    p.next = p2
     p2.next = p3
+    print(p.head, p.next.head, p.next.next.head)
 
-    print(Llist, Llist.next, Llist.next.next, )
-    reverse_list = reverseLinkList(Llist)
-    print(reverse_list, reverse_list.next, reverse_list.next.next, )
+    # 反转
+    rp = reverseLinkedList(p)
+    print(rp.head, rp.next.head, rp.next.next.head)
+
+
 
 
 
