@@ -82,8 +82,6 @@ class ZabbixObject():
 
 
 
-
-
 if __name__ == '__main__':
     zabbix = ZabbixObject("http://120.25.168.251:8989//zabbix/api_jsonrpc.php", "Admin", "aspire@1qaz2wsx")
     print(zabbix.get_all_host())
