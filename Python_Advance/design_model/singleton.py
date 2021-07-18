@@ -21,12 +21,12 @@
 '''
 使用__new__方法
 '''
-# class Base(object):
-#     def __new__(cls, *args, **kwargs):
-#         # 如果当前类没有实例化对象
-#         if not hasattr(cls, "_instance"):
-#             cls._instance = super().__new__(cls, *args, **kwargs)
-#         return cls._instance
+class Base(object):
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "_instance"):
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
 #
 #
 # d1 = Base()

@@ -1,7 +1,7 @@
 '''
 多线程的两种实现方式：
 1：实例化threading.Thread
-2:继承threading.Thread类
+2：继承threading.Thread类
 '''
 import time
 import threading
