@@ -1,35 +1,7 @@
+# -*- coding: utf-8 -*-
 import requests
-import queue
-import time
 import json
-import random
-
-
-#时间装饰器
-def time_deactor(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        func(*args, **kwargs)
-        last_time = time.time() - start_time
-        print(f"cost time {last_time}")
-    return wrapper
-
-
-def generate_headers():
-    user_agent_list = [
-        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36",
-        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
-        "Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.5; en-US; rv:1.9.2.15) Gecko/20110303 Firefox/3.6.15",
-    ]
-    return {
-        "Content-Type": "application/json",
-        'User-Agent': random.choice(user_agent_list)
-    }
-
+from common.common_func import generate_headers
 
 class ZabbixObject():
     def __init__(self, url, user, password):
@@ -67,7 +39,8 @@ class ZabbixObject():
             "method": "host.get",
             "params": {
                 "output": ["hostid", "host"],
-                "selectInterfaces": ["ip"]
+                "selectInterfaces": ["ip"],
+                "selectItems": ["itemid", "name", "key_"]
             },
             "auth": self.token,
             "id": 1
@@ -77,8 +50,19 @@ class ZabbixObject():
         except Exception:
             pass
         else:
-            # 该处会处理interfaces接口
-            return res.text
+            # 格式化数据, 取出interfaces接口中第一个ip地址
+            def pick_ip(item):
+                if item.get("interfaces"):
+                    item["ip"] = item.get("interfaces")[0].get("ip")
+                    item.pop("interfaces")
+                    return item
+                return None
+
+            host_list = json.loads(res.text).get("result")
+
+            if host_list:
+                format_data = list(map(pick_ip, host_list))
+            return format_data
 
 
 
