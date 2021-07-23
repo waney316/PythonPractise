@@ -4,6 +4,8 @@
 import time
 import random
 from collections import Counter
+import json
+import requests
 
 #时间装饰器
 def time_deactor(func):
@@ -29,7 +31,6 @@ def generate_headers():
         "Content-Type": "application/json",
         'User-Agent': random.choice(user_agent_list)
     }
-
 
 
 def handle_host(host):
@@ -58,8 +59,62 @@ def handle_host(host):
                 hashMap.add(key)
     else:
         host["items"] = None
-
     return host
 
+
+# 获取zabbix登录token
+def get_token(url, user, password):
+    data = json.dumps({
+        "jsonrpc": "2.0",
+        "method": "user.login",
+        "params": {
+            "user": user,
+            "password": password
+        },
+        "id": 1,
+        "auth": None
+    })
+    try:
+        res = requests.post(url=url, headers=generate_headers(), data=data)
+    except Exception:
+        pass
+    else:
+        if not json.loads(res.text)["result"]:
+            return None
+        return json.loads(res.text)["result"]
+
+# 获取主机列表
+def get_all_host(self, url, token):
+        data = json.dumps({
+            "jsonrpc": "2.0",
+            "method": "host.get",
+            "params": {
+                "output": ["hostid", "host"],
+                "selectInterfaces": ["ip"],
+                "selectItems": ["itemid", "name", "key_", "selectItemDiscovery"]
+            },
+            "auth": self.token,
+            "id": 1
+        })
+        try:
+            res = requests.post(url=self.url, headers=generate_headers(), data=data)
+        except Exception:
+            pass
+        else:
+            # 格式化数据, 取出interfaces接口中第一个ip地址
+            def pick_ip(item):
+                if item.get("interfaces"):
+                    item["ip"] = item.get("interfaces")[0].get("ip")
+                    item.pop("interfaces")
+                    return item
+                return None
+
+            host_list = json.loads(res.text).get("result")
+
+            if host_list:
+                format_data = list(map(pick_ip, host_list))
+            # print(type(format_data))
+            # print(sys.getsizeof(format_data))
+        return (host for host in format_data)
 
 
