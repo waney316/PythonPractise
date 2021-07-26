@@ -17,6 +17,7 @@ def time_deactor(func):
     return wrapper
 
 
+# 随机生成头部
 def generate_headers():
     user_agent_list = [
         "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
@@ -33,10 +34,12 @@ def generate_headers():
     }
 
 
-def handle_host(host):
+# 处理zabbix返回hosts信息
+def handle_host(host, exclude_metrics):
     """
     1：将host中获取到的interfaces第一个值置换为ip，剔除interfaces接口
-    2：将监控项key_去重，去除自动发现里较多的监控项
+    2：自动发现的key值取出[]前字符，置换原本key值
+    3：计算key值是否有最新数据
     :param item:
     :return:
     """
@@ -49,10 +52,23 @@ def handle_host(host):
 
     # 去重监控项, 自动发现的监控项规则为 xx.xx.xx[]，通过正则匹配[
     hashMap = {}
-    exclude_str = ["snmptrap", "zabbix"]  # 不包含snmptrap类型的监控项
 
     if host.get("items"):
         for item in host.get("items"):
+            # 如果监控项类型位于excelude_metricd中,去除
+            if item.get("type") in exclude_metrics:
+                host.pop(item)
+
+            # 如果监控项类型为普通
+            if item.get("flags") == "0":
+                # 如果有最新值且监控项状态为0
+                if int(item.get("lastclock")) > 0 and item.get("state") == "0":
+                    # 去除判断数据
+                    item.pop("lastvalue")
+
+                    # 更新状态
+                    item.update({"status": "1"})
+
             key = item.get("key_")
             # 如果键值未在hashMap
             if key not in hashMap or key.startwith():
@@ -62,59 +78,8 @@ def handle_host(host):
     return host
 
 
-# 获取zabbix登录token
-def get_token(url, user, password):
-    data = json.dumps({
-        "jsonrpc": "2.0",
-        "method": "user.login",
-        "params": {
-            "user": user,
-            "password": password
-        },
-        "id": 1,
-        "auth": None
-    })
-    try:
-        res = requests.post(url=url, headers=generate_headers(), data=data)
-    except Exception:
-        pass
-    else:
-        if not json.loads(res.text)["result"]:
-            return None
-        return json.loads(res.text)["result"]
-
-# 获取主机列表
-def get_all_host(self, url, token):
-        data = json.dumps({
-            "jsonrpc": "2.0",
-            "method": "host.get",
-            "params": {
-                "output": ["hostid", "host"],
-                "selectInterfaces": ["ip"],
-                "selectItems": ["itemid", "name", "key_", "selectItemDiscovery"]
-            },
-            "auth": self.token,
-            "id": 1
-        })
-        try:
-            res = requests.post(url=self.url, headers=generate_headers(), data=data)
-        except Exception:
-            pass
-        else:
-            # 格式化数据, 取出interfaces接口中第一个ip地址
-            def pick_ip(item):
-                if item.get("interfaces"):
-                    item["ip"] = item.get("interfaces")[0].get("ip")
-                    item.pop("interfaces")
-                    return item
-                return None
-
-            host_list = json.loads(res.text).get("result")
-
-            if host_list:
-                format_data = list(map(pick_ip, host_list))
-            # print(type(format_data))
-            # print(sys.getsizeof(format_data))
-        return (host for host in format_data)
 
 
+
+if __name__ == '__main__':
+    pass
