@@ -20,6 +20,10 @@ datasource:
       user: "Admin"
       password: "aspire@1qaz2wsx"
 
+# kafka集群地址
+kafka:
+  cluster_address:
+
 excluding_metrics_type:
   - 17  # SNMP trap;
   - 9  #  web item

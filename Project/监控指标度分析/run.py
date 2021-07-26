@@ -129,28 +129,7 @@ class ZabbixObject():
             format_data = list(map(pick_ip, host_list))
             return format_data
 
-    # def get_item_value(self):
-    #     print(self.get_all_host())
-    #     data = {
-    #             "jsonrpc": "2.0",
-    #             "method": "item.get",
-    #             "params": {
-    #                 "output": ["lastvalue", "hostid", "lastclock"],
-    #             },
-    #             "auth": self.token,
-    #             "id": 1
-    #         }
-    #     for item in self.get_all_host():
-    #         for host in item.get("items"):
-    #
-    #     # for item in items.get("items"):
-    #     #     data["params"]["itemid"] = item["itemid"]
-    #     #     try:
-    #     #         res = requests.post(url=self.url, headers=generate_headers(), data=json.dumps(data))
-    #     #     except Exception:
-    #     #         pass
-    #     #     else:
-    #     #         print(res)
+
 
 
 def execute_thread(obj):

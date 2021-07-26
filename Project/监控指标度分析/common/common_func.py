@@ -4,8 +4,7 @@
 import time
 import random
 from collections import Counter
-import json
-import requests
+import re
 
 #时间装饰器
 def time_deactor(func):
@@ -50,8 +49,8 @@ def handle_host(host, exclude_metrics):
     else:
         host["ip"] = None
 
-    # 去重监控项, 自动发现的监控项规则为 xx.xx.xx[]，通过正则匹配[
-    hashMap = {}
+    # 计数自动发现数量
+    countMap = Counter()
 
     if host.get("items"):
         for item in host.get("items"):
@@ -61,20 +60,23 @@ def handle_host(host, exclude_metrics):
 
             # 如果监控项类型为普通
             if item.get("flags") == "0":
-                # 如果有最新值且监控项状态为0
-                if int(item.get("lastclock")) > 0 and item.get("state") == "0":
-                    # 去除判断数据
-                    item.pop("lastvalue")
+                head_key = item.get("key")
+                item["status"] = 0 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 1
+                item.pop("lastvalue")
 
-                    # 更新状态
-                    item.update({"status": "1"})
+            # 如果为自动发现类型
+            elif item.get("flags") == "4":
+                head_key = re.match("^(.*)\[", item.get("key")).group(1)
+                if head_key not in countMap:
+                    item["status"] = 0 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 1
 
-            key = item.get("key_")
-            # 如果键值未在hashMap
-            if key not in hashMap or key.startwith():
-                hashMap.add(key)
+            countMap.update(head_key)
+            item["count"] = countMap[head_key]
+
+            # pop some items
     else:
         host["items"] = None
+
     return host
 
 
