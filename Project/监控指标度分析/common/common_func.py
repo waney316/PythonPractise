@@ -51,36 +51,41 @@ def handle_host(host, exclude_metrics):
 
     # 计数自动发现数量
     countMap = Counter()
-
-    if host.get("items"):
-        for item in host.get("items"):
+    items = host.get("items")
+    res = []
+    if items:
+        for (index, item) in enumerate(items):
             # 如果监控项类型位于excelude_metricd中,去除
-            if item.get("type") in exclude_metrics:
-                host.pop(item)
+            if int(item.get("type")) in exclude_metrics:
+                continue
 
+            """
+            item["status"]: 0异常，1正常
+            """
             # 如果监控项类型为普通
             if item.get("flags") == "0":
-                head_key = item.get("key")
-                item["status"] = 0 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 1
-                item.pop("lastvalue")
-
+                head_key = item.get("key_")
+                item["status"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
+                countMap.update({head_key})
             # 如果为自动发现类型
             elif item.get("flags") == "4":
-                head_key = re.match("^(.*)\[", item.get("key")).group(1)
+                head_key = re.match("^(.*)\[", item.get("key_")).group(1)
                 if head_key not in countMap:
-                    item["status"] = 0 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 1
-
-            countMap.update(head_key)
-            item["count"] = countMap[head_key]
-
-            # pop some items
-    else:
-        host["items"] = None
-
+                    item["status"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
+                    item["key_"] = head_key
+                    countMap.update({head_key})
+                else:
+                    countMap.update({head_key})
+                    continue
+            # pop some label
+            [ item.pop(remove_key) for remove_key in ("lastclock", "type", "flags" ) ]
+            item["count"] = countMap[item["key_"]]
+            res.append(item)
+    # 更新count
+    for item in res:
+        item["count"] = countMap[item["key_"]]
+    host.update({"items": res})
     return host
-
-
-
 
 
 if __name__ == '__main__':

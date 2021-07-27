@@ -5,6 +5,7 @@
 1: 对两个字符串排序 return sorted(s) == sorted(t)
 2: 哈希表
 """
+
 class Solution(object):
     def isAnagram(self, s, t):
         """
@@ -15,8 +16,19 @@ class Solution(object):
         s_dict = {}
         t_dict = {}
         for x in s:
-            s_dict[x] += 1
+            if x in s_dict:
+                s_dict[x] += 1
+            else:
+                s_dict[x] = 1
 
         for y in t:
-            t_dict[y]
+            if y in t_dict:
+                t_dict[y] += 1
+            else:
+                t_dict[y] = 1
+
+        return s_dict == t_dict
+
+s = Solution()
+s.isAnagram("abc", "aaaa")
 

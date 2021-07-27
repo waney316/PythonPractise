@@ -21,9 +21,10 @@ datasource:
       password: "aspire@1qaz2wsx"
 
 # kafka集群地址
-kafka:
-  cluster_address:
+
+bootstrap_servers: ["1.1.1.1:9092", "2.2.2:9092", "3.3.3.3:9092"]
 
 excluding_metrics_type:
   - 17  # SNMP trap;
   - 9  #  web item
+  - 5
