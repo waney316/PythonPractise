@@ -4,16 +4,14 @@ logging: debug
 logfile: monitor_metrics.log
 #loghanler: monitor_metrics_logs
 
-# 线程池数量
-threadPool: 5
 
 # zabbix数据源配置
 datasource:
   server:
-#    - name: "idc_zabbix"
-#      url: "http://10.12.66.107"
-#      user: "wangwei"
-#      password: "aspire@1qaz2wsx"
+    - name: "idc_zabbix"
+      url: "http://10.12.66.107"
+      user: "wangwei"
+      password: "aspire@1qaz2wsx"
 
     - name: "cloud_zabbix"
       url: "http://120.25.168.251:8989"
@@ -22,7 +20,9 @@ datasource:
 
 # kafka集群地址
 
-bootstrap_servers: ["1.1.1.1:9092", "2.2.2:9092", "3.3.3.3:9092"]
+bootstrap_servers: ["10.12.70.42:9092"]
+topic: "zabbix"
+
 
 excluding_metrics_type:
   - 17  # SNMP trap;

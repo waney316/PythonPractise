@@ -9,9 +9,9 @@ import logging.handlers
 
 from queue import  Queue
 from urllib.parse import urljoin
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED, ALL_COMPLETED
 
-from common.common_func import generate_headers, handle_host
+from common.common_func import generate_headers, handle_host, handle_thread
 
 
 
@@ -64,13 +64,15 @@ logger.addHandler(stream_handler)
 
 
 class ZabbixObject():
-    def __init__(self, url, user, password, queue):
+    def __init__(self, url, user, password, queue, excude_metrics):
         # 初始化zabbix登录信息
         self.user = user
         self.password = password
         self.url = urljoin(url, "zabbix/api_jsonrpc.php")
         self.token = self._get_token()
         self.queue = queue
+        self.exclude_metrics = excude_metrics
+
 
     # 获取zabbix登录token
     def _get_token(self):
@@ -106,46 +108,67 @@ class ZabbixObject():
             "jsonrpc": "2.0",
             "method": "host.get",
             "params": {
-                "output": ["hostid", "host"],
-                "selectInterfaces": ["ip"],
-                "selectItems": ["itemid", "name", "key_", "lastclock", "state", "flags", "type"],
+                "output": ["hostid", "host"]
             },
             "auth": self.token,
             "id": 1
         })
         try:
             res = requests.post(url=self.url, headers=generate_headers(), data=data)
-        except Exception:
-            logger.error(f"zabbix: {self.url}-获取主机列表超时或错误")
+        except Exception as e:
+            logger.error(f"zabbix: {self.url}-获取主机列表超时或错误{e}")
         else:
             host_list = json.loads(res.text).get("result")
             # host_list列表不为空, 即存在主机接入
             if not host_list:
                 logger.error(f"zabix-{self.url}-host_list列表为空")
                 return None
-
-            # 遍历所有主机列表
+            # 返回主机列表
             for host in host_list:
-                response = handle_host(host, kwargs.get("exclude_metrics_type"))
-                logger.info(f"get response from host: {host}, data: {response}, put to the queue")
-                self.queue.put(response)
+                yield host
+
+    def get_host_item(self, host, *args, **kwargs,):
+        data = json.dumps({
+            "jsonrpc": "2.0",
+            "method": "host.get",
+            "params": {
+                "hostids": host.get("hostid"),
+                "output": ["hostid", "host"],
+                "selectInterfaces": ["ip"],
+                "selectItems": ["itemid", "name", "key_", "lastclock", "state", "flags", "type"]
+            },
+            "auth": self.token,
+            "id": 1
+        })
+        try:
+            res = requests.post(url=self.url, headers=generate_headers(), data=data)
+        except Exception as e:
+            logger.error(f"zabbix: {self.url}-获取主机监控项数据超时或错误{e}")
+        else:
+            host_metrics = json.loads(res.text).get("result")[0]
+            # host_list列表不为空, 即存在主机接入
+            response = handle_host(host_metrics, self.exclude_metrics)
+            # logger.info(f"get response from host: {host.get('host')}, data: {response}, put to the queue")
+            self.queue.put(response)
 
 
 class Producer():
-    def __init__(self, producer, queue):
+    def __init__(self, producer):
         # 初始化kafak集群地址
         self.producer = producer
-        self.queue = queue
 
-    def send(self):
+    def send(self, queue):
         # 从队列取出数据
-        while not self.queue.empty():
-            future = self.producer.send(
-                'kafka_demo',  # topic
-                key='count_num',  # key
-                value=str(self.queue.get()),
-                partition=1)  # 向分区1发送消息
+        print(queue.get())
+        while not queue.empty():
+            logger.info("get host from queue")
+            print(queue.get())
             logger.info("send {}".format(str(self.queue.get())))
+            future = self.producer.send(
+                'zabbix',  # topic
+                value=bytes(self.queue.get()),
+                partition=1)  # 向分区1发送消息
+
             try:
                 future.get(timeout=10)  # 监控是否发送成功
             except kafka_errors:  # 发送失败抛出kafka_errors
@@ -156,42 +179,33 @@ class Producer():
 if __name__ == '__main__':
     try:
         datasource = config.get("datasource").get("server")
-        poolSize = config.get("threadPool")
-        excluding_metrics_type = config.get("excluding_metrics_type")
-
+        exclude_metrics = config.get("excluding_metrics_type")
         bootstrap_servers = config.get("bootstrap_servers")
     except Exception as e:
         logger.error("获取zabbix数据源错误,请检查语法")
         sys.exit(1)
 
-    # 根据server数量创建线程池
-    tasks = []
-    q = Queue(1000)
-    executor = ThreadPoolExecutor(max_workers=poolSize)
+    queue = Queue(10000)
+    executor = ThreadPoolExecutor(max_workers=20)
+    fulture_tasks = []
+    for server in datasource:
+        # 开启两个线程执行数据提取数据
+        zabbix = ZabbixObject(server["url"], server["user"], server["password"], queue, exclude_metrics)
+        zabbix_future = executor.submit(handle_thread, zabbix, )
+        fulture_tasks.append(zabbix_future)
 
-    # 构建kafka生产者
-    print(bootstrap_servers)
+    # # 当任何一个线程完成后
+    wait(fulture_tasks, return_when=ALL_COMPLETED)
+
+    # 开启kafka同步线程
     try:
-        producer = KafkaProducer(
-            bootstrap_servers=bootstrap_servers,
-            key_serializer=lambda k: json.dumps(k).encode(),
-            value_serializer=lambda v: json.dumps(v).encode())
+        p = KafkaProducer(bootstrap_servers=bootstrap_servers)
+
+        while not queue.empty():
+            p.send('zabbix',  # topic
+                value=json.dumps(queue.get()).encode())
+            logger.info(f"get data from queeu {queue.get()}")
     except Exception:
         logger.error(f"kafka cluster: {bootstrap_servers} connect faild")
 
-    # 开启zabbix数据获取线程
-    for server in datasource:
-        zabbix = ZabbixObject(server["url"], server["user"], server["password"], q)
-        # execute_thread(zabbix)
-        # 生产者线程
-        zabbix_future = executor.submit(zabbix.get_all_host, **{"exclude_metrics_type": excluding_metrics_type})
-        tasks.append(zabbix_future)
 
-
-    # # 开启kafka数据生产线程
-    producer = Producer(producer, q)
-    kafka_future = executor.submit(producer.send, )
-
-
-    # 当zabbix线程结束后, 且队列为空，结束kafak线程
-    # if [  task in tasks]

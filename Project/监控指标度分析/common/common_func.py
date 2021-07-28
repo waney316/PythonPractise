@@ -88,5 +88,11 @@ def handle_host(host, exclude_metrics):
     return host
 
 
+# 线程调图执行
+def handle_thread(obj):
+    for host in obj.get_all_host():
+        obj.get_host_item(host)
+
+
 if __name__ == '__main__':
     pass
