@@ -3,16 +3,13 @@ import json
 import os
 import time
 import sys
-import traceback
 import pathlib
 import logging.handlers
 
-from queue import  Queue
+from queue import Queue
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED, ALL_COMPLETED
-
-from common.common_func import generate_headers, handle_host, handle_thread
-
+from common.common_func import generate_headers, handle_host, handle_thread, send_message
 
 
 # 脚本工作目录
@@ -28,7 +25,7 @@ if not pathlib.Path(os.path.join(BASE_DIR, "config/config.yml")):
     print("请确保config目录下存在config.yml文件")
     sys.exit(1)
 
-# 确认是否安装requests/queue模块
+# 确认是否安装requests/queue, kafka模块
 try:
     import requests
     import queue
@@ -36,7 +33,7 @@ try:
     from kafka import KafkaProducer
     from kafka.errors import kafka_errors
 except ImportError:
-    print("模块导入错误，请确保模块 requests/queue 模块已经安装")
+    print("模块导入错误，请确保模块 requests/queue/kafka 模块已经安装")
     sys.exit(1)
 
 # 读取config.yml配置信息
@@ -72,7 +69,6 @@ class ZabbixObject():
         self.token = self._get_token()
         self.queue = queue
         self.exclude_metrics = excude_metrics
-
 
     # 获取zabbix登录token
     def _get_token(self):
@@ -114,7 +110,7 @@ class ZabbixObject():
             "id": 1
         })
         try:
-            res = requests.post(url=self.url, headers=generate_headers(), data=data)
+            res = requests.post(url=self.url, headers=generate_headers(), data=data, stream=True)
         except Exception as e:
             logger.error(f"zabbix: {self.url}-获取主机列表超时或错误{e}")
         else:
@@ -123,11 +119,12 @@ class ZabbixObject():
             if not host_list:
                 logger.error(f"zabix-{self.url}-host_list列表为空")
                 return None
-            # 返回主机列表
-            for host in host_list:
-                yield host
 
-    def get_host_item(self, host, *args, **kwargs,):
+            # 返回主机列表
+            return host_list
+
+    # 根据host返回主机items
+    def get_host_item(self, host, *args, **kwargs):
         data = json.dumps({
             "jsonrpc": "2.0",
             "method": "host.get",
@@ -143,69 +140,60 @@ class ZabbixObject():
         try:
             res = requests.post(url=self.url, headers=generate_headers(), data=data)
         except Exception as e:
-            logger.error(f"zabbix: {self.url}-获取主机监控项数据超时或错误{e}")
+            logger.error(f"zabbix: {self.url}-host: {host}-获取主机监控项数据超时或错误{e}")
         else:
             host_metrics = json.loads(res.text).get("result")[0]
             # host_list列表不为空, 即存在主机接入
             response = handle_host(host_metrics, self.exclude_metrics)
-            # logger.info(f"get response from host: {host.get('host')}, data: {response}, put to the queue")
             self.queue.put(response)
-
-
-class Producer():
-    def __init__(self, producer):
-        # 初始化kafak集群地址
-        self.producer = producer
-
-    def send(self, queue):
-        # 从队列取出数据
-        print(queue.get())
-        while not queue.empty():
-            logger.info("get host from queue")
-            print(queue.get())
-            logger.info("send {}".format(str(self.queue.get())))
-            future = self.producer.send(
-                'zabbix',  # topic
-                value=bytes(self.queue.get()),
-                partition=1)  # 向分区1发送消息
-
-            try:
-                future.get(timeout=10)  # 监控是否发送成功
-            except kafka_errors:  # 发送失败抛出kafka_errors
-                traceback.format_exc()
-
+            logger.info(f"get response from zabbix {self.url} host: {host.get('host')} and put to the queue")
 
 
 if __name__ == '__main__':
     try:
         datasource = config.get("datasource").get("server")
         exclude_metrics = config.get("excluding_metrics_type")
-        bootstrap_servers = config.get("bootstrap_servers")
+        kafka_config = config.get("kafka")
+        thread_pool_size = config.get("thread_pool_size")
     except Exception as e:
         logger.error("获取zabbix数据源错误,请检查语法")
         sys.exit(1)
 
+    # 构造队列存储每个主机IP数据
     queue = Queue(10000)
-    executor = ThreadPoolExecutor(max_workers=20)
-    fulture_tasks = []
+    # 构造线程池
+    executor = ThreadPoolExecutor(max_workers=int(thread_pool_size))
+    future_tasks = []
+
     for server in datasource:
-        # 开启两个线程执行数据提取数据
         zabbix = ZabbixObject(server["url"], server["user"], server["password"], queue, exclude_metrics)
-        zabbix_future = executor.submit(handle_thread, zabbix, )
-        fulture_tasks.append(zabbix_future)
+        hostlist = zabbix.get_all_host()
+        zabbix_future = executor.submit(handle_thread, zabbix, hostlist, )
+        future_tasks.append(zabbix_future)
 
-    # # 当任何一个线程完成后
-    wait(fulture_tasks, return_when=ALL_COMPLETED)
-
-    # 开启kafka同步线程
+    wait(future_tasks, return_when=ALL_COMPLETED)
+    # 开启kafka数据同步线程
+    kafka_tasks = []
+    start_time = time.time()
     try:
-        p = KafkaProducer(bootstrap_servers=bootstrap_servers)
+        p = KafkaProducer(bootstrap_servers=kafka_config.get("bootstrap_servers"))
+        kafka_thread_nums = kafka_config.get("thread_nums")
+        topic = kafka_config.get("topic")
+    except Exception as e:
+        logger.error(f"kafka cluster: {kafka_config.get('bootstrap_servers')} connect faild: {e}")
+    else:
+        logger.info(f"connect to the kafka cluster {kafka_config.get('bootstrap_servers')}")
+        # send_message(p, queue, logger, topic)  # 单线程测试
+        print(queue.qsize())
+        # 开启kafka_thread_nums个线程用于发送kafak消息
+        for i in range(int(kafka_thread_nums)):
+            kafka_future = executor.submit(send_message, p, queue, logger, topic)
+            kafka_tasks.append(kafka_future)
 
-        while not queue.empty():
-            p.send('zabbix',  # topic
-                value=json.dumps(queue.get()).encode())
-            logger.info(f"get data from queeu {queue.get()}")
-    except Exception:
-        logger.error(f"kafka cluster: {bootstrap_servers} connect faild")
+    for task in as_completed(kafka_tasks):
+        data = task.result()
+        print(f"main: {data}")
+    wait(kafka_tasks, return_when=ALL_COMPLETED)
+    executor.shutdown()
 
 

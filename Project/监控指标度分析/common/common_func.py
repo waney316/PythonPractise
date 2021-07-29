@@ -5,6 +5,10 @@ import time
 import random
 from collections import Counter
 import re
+import json
+
+from kafka.errors import kafka_errors
+import traceback
 
 #时间装饰器
 def time_deactor(func):
@@ -23,12 +27,11 @@ def generate_headers():
         "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36",
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36",
-        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
-        "Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10.5; en-US; rv:1.9.2.15) Gecko/20110303 Firefox/3.6.15",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36"
     ]
     return {
-        "Content-Type": "application/json",
+        "Content-Type": "application/jsonrequest",
+        "Connection": "Keep-alive",
         'User-Agent': random.choice(user_agent_list)
     }
 
@@ -88,10 +91,30 @@ def handle_host(host, exclude_metrics):
     return host
 
 
-# 线程调图执行
-def handle_thread(obj):
-    for host in obj.get_all_host():
+# 线程调度执行
+def handle_thread(obj, hostlist):
+    for host in hostlist:
         obj.get_host_item(host)
+
+
+# kakfa消息发送
+def send_message(producer, queue, logger, topic):
+    """
+    用于从队列取出数据,生产者发送消息
+    :param producer: kafka 生产者
+    :param queue: 队列
+    :return:
+    """
+
+    while not queue.empty():
+        logger.info("enter")
+        send_future = producer.send(topic, value=json.dumps(queue.get()).encode())
+        logger.info(f"send data from queue {queue.get()}")
+        try:
+            send_future.get(timeout=10) # 监控是否发送成功
+        except kafka_errors:  # 发送失败抛出kafka_errors
+            traceback.format_exc()
+        time.sleep(0.5)
 
 
 if __name__ == '__main__':
