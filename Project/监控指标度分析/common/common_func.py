@@ -2,6 +2,8 @@
 # 通用函数
 
 import time
+from datetime import datetime
+from functools import wraps
 import random
 from collections import Counter
 import re
@@ -9,6 +11,31 @@ import json
 
 from kafka.errors import kafka_errors
 import traceback
+
+
+# 将log日志记录到指定文件
+class log_to_file():
+    def __init__(self, logfile):
+        self.logfile = self.logfile + "-" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def __call__(self, func, *args, **kwargs):
+        print(func.__name__)
+        print(self.logfile)
+        res = func(args, **kwargs)
+        with open(self.logfile, "w+", encoding="utf-8") as f:
+            f.write(res)
+
+def log_to_file(logfile):
+    def call(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            res = func(*args, **kwargs)
+            with open(logfile, "w+", encoding="utf-8") as f:
+                f.write(res)
+            return res
+        return wrapper
+    return call
+
 
 #时间装饰器
 def time_deactor(func):
@@ -36,7 +63,7 @@ def generate_headers():
     }
 
 
-# 处理zabbix返回hosts信息
+# 处理zabbix返(回hosts信息
 def handle_host(host, exclude_metrics):
     """
     1：将host中获取到的interfaces第一个值置换为ip，剔除interfaces接口
@@ -105,16 +132,19 @@ def send_message(producer, queue, logger, topic):
     :param queue: 队列
     :return:
     """
-
     while not queue.empty():
-        logger.info("enter")
-        send_future = producer.send(topic, value=json.dumps(queue.get()).encode())
-        logger.info(f"send data from queue {queue.get()}")
+        item = queue.get()
+        send_future = producer.send(topic, value=json.dumps(item).encode())
+        logger.info(f"send data from queue {item}")
+        queue.task_done()
+
         try:
             send_future.get(timeout=10) # 监控是否发送成功
         except kafka_errors:  # 发送失败抛出kafka_errors
             traceback.format_exc()
-        time.sleep(0.5)
+
+
+
 
 
 if __name__ == '__main__':

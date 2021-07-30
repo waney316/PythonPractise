@@ -9,7 +9,7 @@ import logging.handlers
 from queue import Queue
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED, ALL_COMPLETED
-from common.common_func import generate_headers, handle_host, handle_thread, send_message
+from common.common_func import generate_headers, handle_host, handle_thread, send_message, log_to_file
 
 
 # 脚本工作目录
@@ -147,6 +147,7 @@ class ZabbixObject():
             response = handle_host(host_metrics, self.exclude_metrics)
             self.queue.put(response)
             logger.info(f"get response from zabbix {self.url} host: {host.get('host')} and put to the queue")
+            return response
 
 
 if __name__ == '__main__':
@@ -165,6 +166,7 @@ if __name__ == '__main__':
     executor = ThreadPoolExecutor(max_workers=int(thread_pool_size))
     future_tasks = []
 
+    # 往队列写入数据
     for server in datasource:
         zabbix = ZabbixObject(server["url"], server["user"], server["password"], queue, exclude_metrics)
         hostlist = zabbix.get_all_host()
@@ -172,9 +174,10 @@ if __name__ == '__main__':
         future_tasks.append(zabbix_future)
 
     wait(future_tasks, return_when=ALL_COMPLETED)
+
     # 开启kafka数据同步线程
     kafka_tasks = []
-    start_time = time.time()
+
     try:
         p = KafkaProducer(bootstrap_servers=kafka_config.get("bootstrap_servers"))
         kafka_thread_nums = kafka_config.get("thread_nums")
@@ -183,17 +186,21 @@ if __name__ == '__main__':
         logger.error(f"kafka cluster: {kafka_config.get('bootstrap_servers')} connect faild: {e}")
     else:
         logger.info(f"connect to the kafka cluster {kafka_config.get('bootstrap_servers')}")
+        logger.info(f"currnet queue size {queue.qsize()}")
+        start_time = time.time()
         # send_message(p, queue, logger, topic)  # 单线程测试
-        print(queue.qsize())
+
         # 开启kafka_thread_nums个线程用于发送kafak消息
         for i in range(int(kafka_thread_nums)):
             kafka_future = executor.submit(send_message, p, queue, logger, topic)
             kafka_tasks.append(kafka_future)
 
-    for task in as_completed(kafka_tasks):
-        data = task.result()
-        print(f"main: {data}")
+    # 所有线程完成后
     wait(kafka_tasks, return_when=ALL_COMPLETED)
     executor.shutdown()
+    logger.info(f"cost time: {time.time() - start_time}")
+
+
+
 
 
