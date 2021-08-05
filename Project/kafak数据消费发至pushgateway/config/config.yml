@@ -1,0 +1,21 @@
+---
+# 日志级别
+logging: debug
+logfile: push_metrics.log
+
+# 选择工作模式
+model: pushgateway
+
+# zabbix数据源配置
+pushgateway:
+    server: "10.12.70.43:9099"
+    job: "gbase_job"
+
+zabbix:
+  server: "10.12.70.41"
+
+# kafka集群地址
+kafka:
+  bootstrap_servers: ["10.12.70.42:9092"]
+  topic: "gbase_data"
+
