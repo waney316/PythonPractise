@@ -5,7 +5,6 @@
 
 import json
 
-
 # 验证kafak取出数据是否包含指定key值,校验数据合法性
 def verify_metrics(metrics):
     # 检查数据是否存在关键key

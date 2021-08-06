@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/8/5 11:20
 # @Author  : waney
-# @File    : verify_data.py
+# @File    : run.py
 
 import json
 import os
@@ -24,12 +24,12 @@ BASE_DIR = pathlib.Path(__file__).resolve().parent
 origin_dirs = ["config", "common", "logs", "tools"]
 if len(set(origin_dirs) & set(os.listdir(BASE_DIR))) < len(origin_dirs):
     print(f"工作路径不对或缺少工作目录{origin_dirs}")
+    sys.exit(1)
 
 if not pathlib.Path(os.path.join(BASE_DIR, "config/config.yml")):
     print("请确保config目录下存在config.yml文件")
     sys.exit(1)
 
-# 确认是否安装requests/queue, kafka模块
 try:
     import requests
     import yaml
@@ -122,7 +122,7 @@ class SendMetricsZbx():
         # 数据发往zabbix的地址
         self.server = server
         # 初始化时判断pushwateway连通性
-        is_open,msg = scan(self.server, "10051")
+        is_open, msg = scan(self.server, "10051")
         if is_open:
             logger.info(f"{self.server} connnect ok")
         else:
@@ -148,11 +148,10 @@ if __name__ == '__main__':
     try:
         push_server = config.get("pushfateway")
         kafka_config = config.get("kafka")
-        thread_pool_size = config.get("thread_pool_size")
         model = config.get("model")
 
     except Exception as e:
-        logger.error("获取zabbix数据源错误,请检查语法")
+        logger.error("get datasource from config.yml error")
         sys.exit(1)
 
     # 初始化kafak消费对象

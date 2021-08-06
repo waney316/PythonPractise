@@ -19,6 +19,7 @@
 
 #### pushgateway
 将数据从kafak取出来的同时，通过prometheus_client模块中push_gateway数据发到代理
+
 优点：
 - 数据存储标签化
 - 需要添加主机和创建监控项，相对动态
@@ -27,7 +28,10 @@
 - 需要自定义告警规则
 - 代码可能造成内存溢出
 
-
+### 说明
+#### 数据格式说明
+- 每次从kafka消费的数据需要为json字符串
+- json字符串需要包含`ip`,`time`,`metrics` 三个key值
 
 ### 脚本部署
 
@@ -51,11 +55,12 @@ logfile: push_metrics.log
 # 选择工作模式, 发往数据到zabbix还是pushgateway
 model: pushgateway  
 
-# zabbix数据源配置
+# Pprometheus相关配置
 pushgateway:
     server: "10.12.70.43:9099"
     job: "gbase_job"   # 分组
 
+# zabbix相关配置
 zabbix:
   server: "10.12.70.41"  # zabbix_server或proxyd地址
 
