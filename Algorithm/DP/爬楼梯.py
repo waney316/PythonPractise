@@ -14,24 +14,15 @@ def climb_stairs(n):
 """
 递归法，使用数组包含每次计算的点，避免重复计算
 """
-res = dict()
-def climb_stairs2(n ):
+res = {0:1, 1:1, 2:2}
+def climb_stairs2(n):
     # 定义数组记录计算过的值
     global  res
-    # 当只有一个台阶，仅有一种走法
-    if n== 1:
-        return 1
-    elif n == 2:
-        return 2
-    res[1], res[2] = 1, 1
+    if not res.get(n):
+        res[n] = climb_stairs2(n-1) + climb_stairs(n-2)
 
-    # 如果该值被计算过
-    if n in res:
-        return res[n]
-    else:
-        res[n] = climb_stairs(n-1) + climb_stairs(n-2)
+    return res.get(n)%1000000007
 
-    return res[n]
 
 
 """
@@ -41,25 +32,21 @@ def climb_stairs2(n ):
 
 """
 def dp_statirs(n):
-    # 记录走法
-    if n == 1:
-      return 1
-    if n == 2:
-      return 2
-    res = [1, 2]
-    for i in range(2, n):
-      res.append(res[i - 1] + res[i - 2])
-    return res[-1]
+    dp = [1,2]
+    for i in range(2, len(n)+1):
+        dp.append(dp[i-1]+dp[i-2])
+    return dp[n]
+
 
 if __name__ == '__main__':
-    s0_time = time.time()
-    r0 = climb_stairs(20)
-    print(f"普通递归{time.time() - s0_time}", r0)
+    # s0_time = time.time()
+    # r0 = climb_stairs(50)
+    # print(f"普通递归{time.time() - s0_time}", r0)
 
     s1_time = time.time()
-    r1 = climb_stairs2(20)
+    r1 = climb_stairs2(50)
     print(f"递归优化{time.time() - s1_time}", r1)
 
-    # s2_time = time.time()
-    # r2 = dp_statirs(50)
-    # print(f"动态规划{time.time() - s2_time}", r2)
+    s2_time = time.time()
+    r2 = dp_statirs(50)
+    print(f"动态规划{time.time() - s2_time}", r2)
