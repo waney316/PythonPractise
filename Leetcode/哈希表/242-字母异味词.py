@@ -13,22 +13,23 @@ class Solution(object):
         :type t: str
         :rtype: bool
         """
-        s_dict = {}
-        t_dict = {}
-        for x in s:
-            if x in s_dict:
-                s_dict[x] += 1
-            else:
-                s_dict[x] = 1
+        s_dict, t_dict = {}, {}
 
-        for y in t:
-            if y in t_dict:
-                t_dict[y] += 1
-            else:
-                t_dict[y] = 1
+        for i in s:
+            s_dict[i] = s_dict[i] +1 if i in s_dict else  1
+
+        for j in t:
+            t_dict[j] = t_dict[j]+1 if j in t_dict else 1
 
         return s_dict == t_dict
 
 s = Solution()
 s.isAnagram("abc", "aaaa")
+
+
+from collections import Counter
+
+counter = Counter("s")
+counter.most_common()
+
 
