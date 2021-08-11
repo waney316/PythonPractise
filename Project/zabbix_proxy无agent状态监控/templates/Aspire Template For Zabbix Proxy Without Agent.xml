@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-08-11T08:25:24Z</date>
+    <groups>
+        <group>
+            <name>Aspire Template Full link monitoring（全链路自监控）</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Aspire Template For Zabbix Proxy Without Agent</template>
+            <name>Aspire Template For Zabbix Proxy Without Agent</name>
+            <description>用于zabbix_proxy与server的连通性监控，适用场景为无agent，由于agent通过proxy上传数据，当agent正常proxy异常，告警可能无法触发的场景。</description>
+            <groups>
+                <group>
+                    <name>Aspire Template Full link monitoring（全链路自监控）</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Proxy_Status</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>origin data</name>
+                    <type>TRAP</type>
+                    <key>proxy_data</key>
+                    <delay>0</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Proxy_Status</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>代理连接状态</name>
+                    <type>DEPENDENT</type>
+                    <key>proxy_discovery</key>
+                    <delay>0</delay>
+                    <lifetime>1d</lifetime>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>代理[{#PROXY_NAME}] 连接延时</name>
+                            <type>DEPENDENT</type>
+                            <key>proxy_lastaccess[{#PROXY_NAME}]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <applications>
+                                <application>
+                                    <name>Proxy_Status</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.data[?(@.proxy_name==&quot;{#PROXY_NAME}&quot;)].proxy_lastaccess</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>return eval(value)[0]</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>proxy_data</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>代理[{#PROXY_NAME}] 连接状态</name>
+                            <type>DEPENDENT</type>
+                            <key>proxy_status[{#PROXY_NAME}]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <applications>
+                                <application>
+                                    <name>Proxy_Status</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.data[?(@.proxy_name==&quot;{#PROXY_NAME}&quot;)].proxy_status</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>  return eval(value)[0]
+</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>proxy_data</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}=1</recovery_expression>
+                                    <name>zabbix监控代理 {#PROXY_NAME} 连接server异常</name>
+                                    <priority>HIGH</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>proxy_data</key>
+                    </master_item>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
