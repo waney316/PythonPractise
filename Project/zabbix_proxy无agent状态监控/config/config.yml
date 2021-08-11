@@ -14,8 +14,7 @@ zabbix:
 
 # 映射到zabbix的主机, 通常与server地址保持一致
 map_host: 10.12.66.107
-
-# 映射模板键值，一般不需要修改
-key: "proxy_status"
+# 映射模板键值，一般不需要修改,如修改
+key: "proxy_data"
 
 

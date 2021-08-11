@@ -5,6 +5,7 @@ import random
 import json
 import time
 
+
 # 随机生成头部
 def generate_headers():
     user_agent_list = [
@@ -27,6 +28,8 @@ intervals = (
     ('m', 60),
     ('s', 1),
     )
+
+
 # 将秒转换为 xd xh xm xs格式
 def parse_time(seconds, granularity=3):
     result = []
@@ -41,8 +44,6 @@ def parse_time(seconds, granularity=3):
     return ' '.join(result[:granularity])
 
 
-
-
 # 格式化zabbix ldd可识别的数据格式
 def ldd(data, timeout, logger):
     current_timestamp = int(time.time())
@@ -52,13 +53,12 @@ def ldd(data, timeout, logger):
         result = dict_data.get("result")
         if result:
             for item in result:
-                lastaccess = int(item.get("lastaccess"))
+                lastaccess = int(item.pop("lastaccess"))
                 # status: 0异常  1正常
-                item["status"] = 0 if abs(current_timestamp-lastaccess) > timeout else 1
-                item["lastaccess"] = parse_time(abs(current_timestamp-lastaccess))
+                item["proxy_name"] = item["{#PROXY_NAME}"] = item.pop("host")
+                item["proxy_status"] = 0 if abs(current_timestamp-lastaccess) > timeout else 1
+                item["proxy_lastaccess"] = parse_time(abs(current_timestamp-lastaccess))
                 logger.info(f"proxy data: {item}")
-    return dict_data
-
-
-if __name__ == '__main__':
-    pass
+    return {
+        "data": dict_data.get("result")
+    }

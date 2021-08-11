@@ -38,7 +38,7 @@ with open(os.path.join(BASE_DIR, "config/config.yml"), encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
 # 初始化日志模块
-logger = CustomLogger(os.path.join(BASE_DIR, "logs", config.get("logfile")), "push_metrics")
+logger = CustomLogger(os.path.join(BASE_DIR, "logs", config.get("logfile")), "get_proxy_status")
 
 
 # 获取server下代理数据
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         server = config.get("zabbix")
         map_host = config.get("map_host")
         timeout = config.get("timeout")
-
+        key = config.get("key")
     except Exception as e:
         logger.error("get server from config.yml error")
         sys.exit(1)
@@ -140,8 +140,9 @@ if __name__ == '__main__':
         proxy_data = zabbix.get_proxy()
         # 格式化代理数据为ldd格式
         format_data = ldd(proxy_data, timeout, logger)
+        print(json.dumps(format_data))
         # 发送数据至zabbix
-        zabbix.send_message(server.get("host"), server.get("port"), format_data)
+        zabbix.send_message(server.get("host"), server.get("port"), map_host, key, format_data)
     else:
         logger.error("zabbix config error")
         sys.exit(1)
