@@ -1,0 +1,37 @@
+---
+# 日志级别
+logging: debug
+logfile: push_metrics.log
+
+# 数据库连接信息,可配置多个
+db:
+  - name: "idc_zabbix"
+    database: zabbix_server
+    table: alerts
+    user: root
+    password: "pass"
+    host: 10.12.7.103
+
+  - name: "cloud_zabbix"
+    database: zabbix_server
+    table: alerts
+    user: root
+    password: "pass"
+    host: 10.12.7.103
+
+
+# 邮件相关信息配置
+smtp_from:
+  smtp_hello:
+  smtp_auth_username:
+  smtp_auth_username:
+smtp_auth_username:
+smtp_smarthost:
+
+# 收件人
+receiver:
+  - wangwei_k@aspirecn.com
+  - zhanshiying@aspirecn.com
+
+
+

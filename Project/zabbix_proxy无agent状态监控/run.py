@@ -24,7 +24,7 @@ assert len(set(origin_dirs) & set(os.listdir(BASE_DIR))) < len(origin_dirs), f"�
 assert pathlib.Path(os.path.join(BASE_DIR, "config/config.yml")), "please sure config/config.yml is exist"
 tools_name = pathlib.Path(os.path.join(BASE_DIR, "tools/zabbix_sender"))
 assert tools_name, "tools/zabbix_sender not exist"
-# assert os.access(tools_name, os.X_OK), "zabbix-sender not have execute privileges, please use chmod +x toosl/zabbix_sender"
+assert os.access(tools_name, os.X_OK), "zabbix-sender not have execute privileges, please use chmod +x toosl/zabbix_sender"
 
 try:
     import requests
@@ -115,7 +115,7 @@ class ZabbixApi():
         -o data: value
         """
 
-        cmd = f"tools/zabbix_sender -s {host}  -p {port} -z {server} -k '{key}' -o \"{str(data)}\" -vv"
+        cmd = f"{os.path.join(BASE_DIR, 'tools/zabbix_sender')} -s {host}  -p {port} -z {server} -k '{key}' -o '{json.dumps(data)}' -vv"
         try:
             res = subprocess.getoutput(cmd)
             logger.info(str(res))
@@ -127,9 +127,13 @@ class ZabbixApi():
 if __name__ == '__main__':
     try:
         server = config.get("zabbix")
-        map_host = config.get("map_host")
         timeout = config.get("timeout")
         key = config.get("key")
+
+        # zabbix_sender 映射配置
+        map_host = config.get("map_host")
+        map_proxy = config.get("map_proxy")
+        map_port = config.get("map_port")
     except Exception as e:
         logger.error("get server from config.yml error")
         sys.exit(1)
@@ -140,9 +144,9 @@ if __name__ == '__main__':
         proxy_data = zabbix.get_proxy()
         # 格式化代理数据为ldd格式
         format_data = ldd(proxy_data, timeout, logger)
-        print(json.dumps(format_data))
+
         # 发送数据至zabbix
-        zabbix.send_message(server.get("host"), server.get("port"), map_host, key, format_data)
+        zabbix.send_message(map_proxy, map_port, map_host, key, format_data)
     else:
         logger.error("zabbix config error")
         sys.exit(1)
