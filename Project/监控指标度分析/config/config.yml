@@ -2,7 +2,6 @@
 # 日志级别
 logging: debug
 logfile: monitor_metrics.log
-#loghanler: monitor_metrics_logs
 
 # 线程池数量：
 thread_pool_size: 52
@@ -23,7 +22,7 @@ datasource:
 # kafka集群地址
 kafka:
   bootstrap_servers: ["10.12.70.42:9092"]
-  topic: "zabbix"
+  topic: "zabbix_items"
   thread_nums: 50    # kafka消息发送线程数量, 需要小于thread_pool_size
 
 excluding_metrics_type:

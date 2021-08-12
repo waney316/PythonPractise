@@ -188,12 +188,12 @@ if __name__ == '__main__':
         logger.info(f"connect to the kafka cluster {kafka_config.get('bootstrap_servers')}")
         logger.info(f"currnet queue size {queue.qsize()}")
         start_time = time.time()
-        send_message(p, queue, logger, topic)  # 单线程测试
+        # send_message(p, queue, logger, topic)  # 单线程测试
 
         # 开启kafka_thread_nums个线程用于发送kafak消息
-        # for i in range(int(kafka_thread_nums)):
-        #     kafka_future = executor.submit(send_message, p, queue, logger, topic)
-        #     kafka_tasks.append(kafka_future)
+        for i in range(int(kafka_thread_nums)):
+            kafka_future = executor.submit(send_message, p, queue, logger, topic)
+            kafka_tasks.append(kafka_future)
 
     # 所有线程完成后
     wait(kafka_tasks, return_when=ALL_COMPLETED)
