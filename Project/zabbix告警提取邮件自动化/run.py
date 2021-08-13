@@ -36,7 +36,7 @@ with open(os.path.join(BASE_DIR, "config/config.yml"), encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
 # 初始化日志模块
-logger = CustomLogger(os.path.join(BASE_DIR, "logs", config.get("logfile")), "get_proxy_status")
+logger = CustomLogger(os.path.join(BASE_DIR, "logs", config.get("logfile")), "alert_report_mail")
 
 
 class AlertMessage():
@@ -98,7 +98,7 @@ class AlertMessage():
             server = smtplib.SMTP()
             server.connect(smtp_server)
             server.sendmail(from_user, receiver, msg.as_string())
-            logger.info(f"send mail success {msg}")
+            logger.info(f"send mail from {from_user} to {receiver} success ")
         except Exception as e:
             logger.error(f"send mail from {from_user} to {receiver} failed: {e}")
         finally:

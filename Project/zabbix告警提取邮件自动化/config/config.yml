@@ -1,7 +1,7 @@
 ---
 # 日志级别
 logging: debug
-logfile: push_metrics.log
+logfile: alert_report_mail.log
 
 # 数据库连接信息,可配置多个
 db:
