@@ -15,5 +15,7 @@ class Solution:
             min_price = min(price_list[i], min_price)
         return max_profit
 
+
+
 s = Solution()
 print(s.maxProfit([7, 12, 1, 5, 9, 3, 11, 6, 4, 10]))
