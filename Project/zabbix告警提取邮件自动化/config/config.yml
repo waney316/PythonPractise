@@ -1,32 +1,21 @@
 ---
 # 日志级别
 logging: debug
-logfile: push_metrics.log
+logfile: alert_report_mail.log
 
 # 数据库连接信息,可配置多个
 db:
   - name: "idc_zabbix"
+    host: 10.12.66.106
+    port: 3306
     database: zabbix_server
-    table: alerts
-    user: root
-    password: "pass"
-    host: 10.12.7.103
-
-  - name: "cloud_zabbix"
-    database: zabbix_server
-    table: alerts
-    user: root
-    password: "pass"
-    host: 10.12.7.103
+    user: zabbix
+    password: "zxs@1q.az+82212-29102zxb"
 
 
 # 邮件相关信息配置
-smtp_from:
-  smtp_hello:
-  smtp_auth_username:
-  smtp_auth_username:
-smtp_auth_username:
-smtp_smarthost:
+smtp_from: "zabbix@sz.mail"
+smtp_server: 10.1.9.82
 
 # 收件人
 receiver:
