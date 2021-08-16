@@ -9,7 +9,7 @@ from decimal import Decimal
 # 格式化邮件内容为html格式
 
 mail_template = """
-<table border width=170 height=100> 
+<table border width="600px" height="200px" > 
     <tr>
         <th>告警日期</th>
         <th>告警总数</th>
@@ -28,7 +28,7 @@ def data2html(data):
             single_data = alert_data.get("data")
             for item in single_data:
                 print(item)
-                line = f"""<tr><td> {item[0]} </td>
+                line = f"""<tr><td > {item[0]} </td>
                             <td> {str(item[1])} </td>
                             <td> {str(item[2])} </td>
                             <td> {str(item[3])} </td>
