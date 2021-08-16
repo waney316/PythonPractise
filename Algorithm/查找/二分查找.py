@@ -27,8 +27,8 @@ def binary_search(sort_array, val):
 
 
 if __name__ == '__main__':
-    # sort_array = [1,2,3,4,5,6,7,8]
-    # print(binary_search(sort_array, 8))
+    sort_array = [1,2,3,4,5,6,7,8]
+    print(binary_search(sort_array, 8))
 
     def fullpermutation(list):
         if list is None:

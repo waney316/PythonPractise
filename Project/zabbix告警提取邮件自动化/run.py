@@ -101,7 +101,7 @@ class AlertMessage():
             logger.info(f"send mail from {from_user} to {receiver} success ")
         except Exception as e:
             logger.error(f"send mail from {from_user} to {receiver} failed: {e}")
-        finally:
+        else:
             server.close()
 
 
