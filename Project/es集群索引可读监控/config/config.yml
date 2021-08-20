@@ -1,0 +1,24 @@
+---
+# 日志级别
+logging: debug
+logfile: proxy_connect_server.log
+
+# ES集群地址,需要声明http
+es_addr: http://10.12.66.105:9200
+
+# 忽略的索引,需精准匹配
+exclude_index:
+  - xxx
+
+
+# 映射到zabbix的主机和zabbix_sender发送的指定地址
+map_host: 10.12.66.107
+map_proxy: 10.12.7.103
+map_port: 10051
+
+# 映射模板键值，一般不需要修改,如修改需要修改模板
+map_discovery_key: "es_index_discovery"
+map_item_key: "es_index_status"
+
+
+

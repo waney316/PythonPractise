@@ -20,7 +20,7 @@ assert sys.version_info > (3,5), "current python version < 3.5, exiting..."
 BASE_DIR = pathlib.Path(__file__).resolve().parent
 
 origin_dirs = ["config", "common", "logs", "utils"]
-assert len(set(origin_dirs) & set(os.listdir(BASE_DIR))) < len(origin_dirs), f"工作路径不对或缺少工作目录{origin_dirs}"
+assert len(set(origin_dirs) & set(os.listdir(BASE_DIR))) == len(origin_dirs), f"工作路径不对或缺少工作目录{origin_dirs}"
 assert pathlib.Path(os.path.join(BASE_DIR, "config/config.yml")), "please sure config/config.yml is exist"
 tools_name = pathlib.Path(os.path.join(BASE_DIR, "tools/zabbix_sender"))
 assert tools_name, "tools/zabbix_sender not exist"

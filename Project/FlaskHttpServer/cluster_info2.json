@@ -1,0 +1,49 @@
+{
+    "cluster01": [
+        {
+            "node220.aspirecn.com": {
+                "DATANODE": {
+                    "jmx": "http://node220.aspirecn.com:1022/jmx"
+                },
+                "HBASE_REGIONSERVER": {
+                    "jmx": "http://node220.aspirecn.com:60030/jmx"
+                },
+                "HISTORYSERVER": {
+                    "jmx": "http://node220.aspirecn.com:19888/jmx"
+                },
+                "JOURNALNODE": {
+                    "jmx": "http://node220.aspirecn.com:8480/jmx"
+                },
+                "NAMENODE": {
+                    "jmx": "http://node220.aspirecn.com:50070/jmx"
+                },
+                "NODEMANAGER": {
+                    "jmx": "http://node220.aspirecn.com:8042/jmx"
+                }
+            }
+        },
+                {
+            "node221.aspirecn.com": {
+                "DATANODE": {
+                    "jmx": "http://node221.aspirecn.com:1022/jmx"
+                },
+                "HBASE_REGIONSERVER": {
+                    "jmx": "http://node221.aspirecn.com:60030/jmx"
+                },
+                "HISTORYSERVER": {
+                    "jmx": "http://node221.aspirecn.com:19888/jmx"
+                },
+                "JOURNALNODE": {
+                    "jmx": "http://node221.aspirecn.com:8480/jmx"
+                },
+                "NAMENODE": {
+                    "jmx": "http://node221.aspirecn.com:50070/jmx"
+                },
+                "NODEMANAGER": {
+                    "jmx": "http://node221.aspirecn.com:8042/jmx"
+                }
+            }
+        }
+
+    ]
+}
