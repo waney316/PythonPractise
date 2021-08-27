@@ -81,3 +81,33 @@ excluding_metrics_type:
 * */12 * * * /bin/python /xxx/xxxx/run.py
 ```
 
+
+#### 指标范例
+- hostid: 主机ID
+- host: 主机名
+- ip: 主机IP
+- data：当前主机的监控项集合
+  - itemid: 监控项id
+  - name： 监控项名称
+  - key_: 监控项键值
+  - state: 监控项状态(1: 禁用/0:启用)
+  - value: 监控项是否正常采集 (1:正常/0:异常)
+  - count: 关联指标项计数 (区分自动发现监控项和普通监控项)
+
+```json
+{
+    "hostid":"10084",
+    "host":"Zabbix server",
+    "ip":"127.0.0.1",
+    "data":[
+        {
+            "itemid":"23327",
+            "name":"Host name of Zabbix agent running",
+            "key_":"agent.hostname",
+            "state":"0",
+            "value":1,
+            "count":1
+        }
+    ]
+}
+```

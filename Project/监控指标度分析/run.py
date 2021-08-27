@@ -9,7 +9,7 @@ import logging.handlers
 from queue import Queue
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED, ALL_COMPLETED
-from common.common_func import generate_headers, handle_host, handle_thread, send_message, log_to_file
+from .common.common_func import generate_headers, handle_host, handle_thread, send_message
 
 
 # 脚本工作目录
@@ -46,10 +46,9 @@ logger.setLevel(logging.DEBUG)
 log_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # 设置为日志轮询handler到指定文件
-log_handler = logging.handlers.TimedRotatingFileHandler(
+log_handler = logging.handlers.RotatingFileHandler(
     filename=os.path.join(BASE_DIR, "logs", config.get("logfile")),
-    when="D",
-    interval=1,
+    maxBytes=100 * 1024 * 1024,
     backupCount=7)
 log_handler.setFormatter(log_format)
 logger.addHandler(log_handler)
@@ -121,6 +120,7 @@ class ZabbixObject():
                 return None
 
             # 返回主机列表
+            # yield host_list
             return host_list
 
     # 根据host返回主机items

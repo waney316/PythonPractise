@@ -1,0 +1,9 @@
+{
+"data":
+  {
+   "headers":{"symbol":"Symbol","name":"Name","lastsale":"Last Sale","netchange":"Net Change","pctchange":"% Change","marketCap":"Market     Cap","country":"Country","ipoyear":"IPO Year","volume":"Volume","sector":"Sector","industry":"Industry","url":"Url"},
+   "rows": [{"symbol":"AACG","name":"ATA Creativity Global American Depositary   Shares","lastsale":"$2.63","netchange":"0.10","pctchange":"3.953%","volume":"230087","marketCap":"83374124.00","country":"China","ipoyear":"","industry":"Service to the Health Industry","sector":"Miscellaneous","url":"/market-activity/stocks/aacg"},{"symbol":"AACIU","name":"Armada Acquisition Corp. I Unit","lastsale":"$9.85","netchange":"0.04","pctchange":"0.408%","volume":"389843","marketCap":"0.00","country":"United States","ipoyear":"2021","industry":"","sector":"","url":"/market-activity/stocks/aaciu"},{"symbol":"AAL","name":"American Airlines Group Inc. Common Stock","lastsale":"$19.83","netchange":"0.72","pctchange":"3.768%","volume":"31468454","marketCap":"12839088789.00","country":"United States","ipoyear":"","industry":"Air Freight/Delivery Services","sector":"Transportation","url":"/market-activity/stocks/aal"},   {"symbol":"ZYNE","name":"Zynerba Pharmaceuticals Inc. Common Stock","lastsale":"$4.20","netchange":"0.20","pctchange":"5.00%","volume":"4733216","marketCap":"173256455.00","country":"United States","ipoyear":"2015","industry":"Biotechnology: Pharmaceutical Preparations","sector":"Health Care","url":"/market-activity/stocks/zyne"},   {"symbol":"ZYXI","name":"Zynex Inc. Common Stock","lastsale":"$13.92","netchange":"-0.07","pctchange":"-0.50%","volume":"96162","marketCap":"483864657.00","country":"United States","ipoyear":"","industry":"Biotechnology: Electromedical & Electrotherapeutic Apparatus","sector":"Health Care","url":"/market-activity/stocks/zyxi"}]
+            },
+"message":null,
+"status":   {"rCode":200,"bCodeMessage":null,"developerMessage":null}
+}

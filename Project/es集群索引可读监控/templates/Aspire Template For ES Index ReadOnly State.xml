@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-08-20T09:16:22Z</date>
+    <groups>
+        <group>
+            <name>Aspire Template Full link monitoring（全链路自监控）</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Aspire Template For ES Index ReadOnly State</template>
+            <name>Aspire Template For ES Index ReadOnly State</name>
+            <description>用于zabbix_sender方式的es的索引是否仅可读监控</description>
+            <groups>
+                <group>
+                    <name>Aspire Template Full link monitoring（全链路自监控）</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>ESIndex_Status</name>
+                </application>
+            </applications>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>ES集群索引</name>
+                    <type>TRAP</type>
+                    <key>es_index_discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>ES索引{#INDEX_NAME}读写状态</name>
+                            <type>TRAP</type>
+                            <key>es_index_status[{#INDEX_NAME}]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>LOG</value_type>
+                            <applications>
+                                <application>
+                                    <name>ESIndex_Status</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{str(true)}=1</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{str(false)}=1</recovery_expression>
+                                    <name>ES索引{#INDEX_NAME}读写状态改变{ITEM.VALUE}</name>
+                                    <priority>HIGH</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>

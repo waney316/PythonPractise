@@ -81,7 +81,7 @@ def handle_host(host, exclude_metrics):
 
     # 计数自动发现数量
     countMap = Counter()
-    items = host.get("items")
+    items = host.pop("items",None)
     res = []
     if items:
         for (index, item) in enumerate(items):
@@ -95,13 +95,13 @@ def handle_host(host, exclude_metrics):
             # 如果监控项类型为普通
             if item.get("flags") == "0":
                 head_key = item.get("key_")
-                item["status"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
+                item["value"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
                 countMap.update({head_key})
             # 如果为自动发现类型
             elif item.get("flags") == "4":
                 head_key = re.match("^(.*)\[", item.get("key_")).group(1)
                 if head_key not in countMap:
-                    item["status"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
+                    item["value"] = 1 if int(item.get("lastclock")) > 0 and item.get("state") == "0" else 0
                     item["key_"] = head_key
                     countMap.update({head_key})
                 else:
@@ -114,7 +114,7 @@ def handle_host(host, exclude_metrics):
     # 更新count
     for item in res:
         item["count"] = countMap[item["key_"]]
-    host.update({"items": res})
+    host.update({"data": res})
     return host
 
 
